@@ -7,7 +7,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.tatvasoftdemo.GridAdapter.CustomListener
 import java.util.*
+import kotlin.collections.ArrayList
+
 
 class MainActivity : AppCompatActivity() {
     lateinit var etNumber: EditText
@@ -54,10 +57,48 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createGrid(gridSize: Int) {
+        var list = getDummyData(gridSize)
+
         rvGrid.layoutManager = GridLayoutManager(this, gridSize)
         val movieListAdapter = GridAdapter()
         rvGrid.adapter = movieListAdapter
-        movieListAdapter.setGridList(getDummyData(gridSize))
+        movieListAdapter.setGridList(list, object : CustomListener {
+            override fun onRedClick(position: Int) {
+                if (list[position].selectedColor == "r") {
+                    list[position].selectedColor = "b"
+                    (rvGrid.adapter as GridAdapter).notifyItemChanged(position)
+                    randomChangeColor(gridSize * gridSize - 1, list) // After click
+                }
+            }
+        })
+
+        randomChangeColor(gridSize * gridSize - 1, list) // First time
+    }
+
+    private fun randomChangeColor(totalItems: Int, list: List<GridModel>) {
+        // val ex : IntArray = intArrayOf()
+        var ex = ArrayList<Int>()
+        for (i in 0..list.size-1) {
+            if(list[i].selectedColor == "b") {
+                ex.add(i)
+            }
+        }
+
+        var rnd = Random()
+        var newRedValue = getRandomWithExclusion(rnd,0,(totalItems), ex)
+        list[newRedValue].selectedColor = "r"
+        (rvGrid.adapter as GridAdapter).notifyItemChanged(newRedValue)
+    }
+
+    private fun getRandomWithExclusion(rnd: Random, start: Int, end: Int, exclude: ArrayList<Int>): Int {
+        var random = start + rnd.nextInt(end - start + 1 - exclude.size)
+        for (ex in exclude) {
+            if (random < ex) {
+                break
+            }
+            random++
+        }
+        return random
     }
 
     private fun getDummyData(gridSize: Int): List<GridModel> {
